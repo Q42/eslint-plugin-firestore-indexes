@@ -463,8 +463,9 @@ const newQuery = typedCollection(firestore.collection('users'), indexes)
 ```
 
 ### Step 2: Automated Migration Tool
-Create a codemod to automatically convert existing queries:
+Create a codemod to automatically convert existing queries (this would need to be built):
 ```bash
+# Proposed migration tool (not yet implemented)
 npx firestore-typed-wrapper-migrate src/**/*.ts
 ```
 
