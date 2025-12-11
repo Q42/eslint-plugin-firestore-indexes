@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 
 const { RuleTester } = require('eslint');
-const rule = require('../lib/rules/firestore-indexes');
+const rule = require('../dist/rules/firestore-indexes');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,6 +21,11 @@ const ruleTester = new RuleTester({
   languageOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
+    parser: require('@typescript-eslint/parser'),
+    parserOptions: {
+      project: './tsconfig.test.json',
+      tsconfigRootDir: path.join(__dirname, '..'),
+    },
   },
 });
 

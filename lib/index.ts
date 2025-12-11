@@ -2,19 +2,14 @@
  * @fileoverview ESLint plugin to ensure Firestore indexes are created for each query
  * @author Q42
  */
-'use strict';
 
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
-
-const firestoreIndexes = require('./rules/firestore-indexes');
+import firestoreIndexes from './rules/firestore-indexes';
 
 //------------------------------------------------------------------------------
 // Plugin Definition
 //------------------------------------------------------------------------------
 
-module.exports = {
+export = {
   rules: {
     'firestore-indexes': firestoreIndexes,
   },

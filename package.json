@@ -2,9 +2,11 @@
   "name": "eslint-firestore-indexes",
   "version": "1.0.0",
   "description": "Ensure Firestore indexes are created for each query in the codebase",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "mocha tests/**/*.test.js",
+    "build": "tsc",
+    "prebuild": "rm -rf dist",
+    "test": "npm run build && mocha tests/**/*.test.js",
     "lint": "eslint lib tests"
   },
   "keywords": [
@@ -28,7 +30,10 @@
     "eslint": ">=8.0.0"
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "^8.49.0",
+    "@typescript-eslint/utils": "^8.49.0",
     "eslint": "^9.39.1",
-    "mocha": "^11.7.5"
+    "mocha": "^11.7.5",
+    "typescript": "^5.9.3"
   }
 }
