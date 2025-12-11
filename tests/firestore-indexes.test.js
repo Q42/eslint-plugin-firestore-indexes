@@ -53,6 +53,39 @@ const testIndexes = {
         { fieldPath: 'rating', order: 'DESCENDING' },
       ],
     },
+    {
+      collectionGroup: 'templates',
+      queryScope: 'COLLECTION',
+      fields: [
+        { fieldPath: 'type', order: 'ASCENDING' },
+        { fieldPath: 'status', order: 'ASCENDING' },
+      ],
+    },
+    {
+      collectionGroup: 'templates',
+      queryScope: 'COLLECTION',
+      fields: [
+        { fieldPath: 'status', order: 'ASCENDING' },
+        { fieldPath: 'type', order: 'ASCENDING' },
+        { fieldPath: 'createdAt', order: 'DESCENDING' },
+      ],
+    },
+    {
+      collectionGroup: 'passports',
+      queryScope: 'COLLECTION',
+      fields: [
+        { fieldPath: 'intakers', arrayConfig: 'CONTAINS', order: 'ASCENDING' },
+        { fieldPath: 'updated', order: 'DESCENDING' },
+      ],
+    },
+    {
+      collectionGroup: 'passports',
+      queryScope: 'COLLECTION',
+      fields: [
+        { fieldPath: 'begeleider', arrayConfig: 'CONTAINS', order: 'ASCENDING' },
+        { fieldPath: 'updated', order: 'DESCENDING' },
+      ],
+    },
   ],
   fieldOverrides: [],
 };
@@ -108,6 +141,35 @@ ruleTester.run('firestore-indexes', rule, {
     {
       code: `
         someOtherFunction().where('field', '==', 'value').get();
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
+
+    // Valid: Custom collection reference function with limit
+    {
+      code: `
+        async function test() {
+          const snapshot = await firestore
+            .templateCollRef()
+            .where('type', '==', templateType)
+            .where('status', '==', FirebaseTemplateStatus.Current)
+            .limit(1)
+            .get();
+        }
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
+
+    // Valid: Array-contains with orderBy (index exists)
+    {
+      code: `
+        async function test() {
+          const snapshot = await firestore
+            .passportCollRef()
+            .where('intakers', 'array-contains', IdToken.uid)
+            .orderBy('updated', 'desc')
+            .get();
+        }
       `,
       options: [{ indexesPath: testIndexesPath }],
     },
@@ -193,6 +255,51 @@ ruleTester.run('firestore-indexes', rule, {
         },
       ],
     },
+
+    // Invalid: Query with where clause after orderBy - missing index
+    {
+      code: `
+        async function test() {
+          const snapshot = await firestore
+            .templateCollRef()
+            .where('status', '==', FirebaseTemplateStatus.Current)
+            .where('type', '==', type)
+            .orderBy('createdAt', 'desc')
+            .where('foobar', '==', 'bar')
+            .get();
+        }
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+      errors: [
+        {
+          messageId: 'missingIndex',
+          data: {
+            collection: 'templates',
+            filters: 'status (==), type (==), createdAt (orderBy), foobar (==)',
+            indexesPath: testIndexesPath,
+          },
+        },
+      ],
+    },
+
+    // Invalid: Array-contains with wrong field - missing index
+    {
+      code: `
+        async function test() {
+          const passportsSnapshot = await firestore
+            .passportCollRef()
+            .where('wrongField', 'array-contains', IdToken.uid)
+            .orderBy('updated', 'desc')
+            .get();
+        }
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+      errors: [
+        {
+          messageId: 'missingIndex',
+        },
+      ],
+    },
   ],
 });
 
@@ -200,3 +307,28 @@ ruleTester.run('firestore-indexes', rule, {
 fs.unlinkSync(testIndexesPath);
 
 console.log('All tests passed!');
+
+// Note: The following test cases for conditional queries are examples for future implementation
+// They require tracking variable reassignments across statements, which is not currently supported
+//
+// Example 1: Conditional query with if statement
+// let query = firestore
+//   .templateCollRef()
+//   .where('status', '==', FirebaseTemplateStatus.Current)
+//   .where('type', '==', type)
+//   .orderBy('createdAt', 'desc')
+//
+// if (schoolId) {
+//   query = query.where('schoolId', '==', schoolId)
+// }
+// const snapshot = await query.get()
+//
+// Example 2: If-else conditional with array-contains
+// let query = firestore.passportCollRef()
+//
+// if (IdToken.role === UserRole.Intaker) {
+//   query = query.where('intakers', 'array-contains', IdToken.uid)
+// } else {
+//   query = query.where('begeleider', 'array-contains', IdToken.uid)
+// }
+// const passportsSnapshot = await query.orderBy('updated', 'desc').get()
