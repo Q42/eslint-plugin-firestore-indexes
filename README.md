@@ -125,8 +125,55 @@ Firestore requires composite indexes for queries that:
 - Use multiple `where()` clauses on different fields
 - Combine `where()` with `orderBy()` on different fields
 - Use multiple `orderBy()` clauses
+- Use array-contains queries with other filters
 
 Single field queries and simple equality checks typically don't require custom indexes.
+
+### Index Merging vs Composite Indexes
+
+Firestore can satisfy some queries in two ways:
+
+**1. Composite Indexes** (recommended for frequently-used queries):
+- Explicit indexes defined in `firestore.indexes.json`
+- Typically provide better performance
+- Required for complex queries with inequality filters or multiple `orderBy` clauses
+
+**2. Index Merging**:
+- Firestore can merge existing single-field indexes to satisfy queries
+- Only works with equality (`==`) filters and at most one `orderBy` clause
+- Requires single-field indexes for each field used in the query
+- May have performance implications compared to composite indexes
+
+### Important: Prefix Matching
+
+Firestore indexes use **prefix matching**. This means:
+- A query must match the index from the first field
+- You cannot skip fields in the middle of an index
+- Query `status == X AND category == Y` cannot use index `[organizationId, status, category]`
+- Conditional queries that add/remove fields at the beginning need separate indexes for each pattern
+
+**Example with conditional filters:**
+```javascript
+let query = firestore
+  .collection('items')
+  .where('status', '==', 'active')
+  .where('category', '==', category)
+  .orderBy('createdAt', 'desc')
+
+if (organizationId) {
+  query = query.where('organizationId', '==', organizationId)
+}
+```
+
+This query requires **two separate indexes**:
+1. Without `organizationId`: `[status, category, createdAt]`
+2. With `organizationId`: `[status, category, organizationId, createdAt]` OR `[organizationId, status, category, createdAt]`
+
+### Special Cases
+
+- **Inequality queries** (`<`, `<=`, `>`, `>=`) must come after equality queries in the index
+- **Multiple inequality queries** on the same field are allowed (e.g., `score >= X AND score <= Y`)
+- **Array-contains queries** require `arrayConfig: "CONTAINS"` in the index configuration
 
 ## Development
 
@@ -149,6 +196,21 @@ Check the `examples/` directory for sample code and configuration:
 - `examples/indexes.json` - Sample indexes configuration
 - `examples/valid-queries.js` - Examples of queries with proper indexes
 - `examples/invalid-queries.js` - Examples of queries missing indexes
+
+## Limitations
+
+This ESLint rule has some limitations:
+
+1. **Dynamic queries**: Cannot detect queries built dynamically at runtime
+2. **Conditional logic**: May have false positives/negatives with complex conditional queries
+3. **Cross-file queries**: Queries built across multiple functions may not be fully detected
+4. **Query helpers**: Custom query helper functions may need special handling
+5. **Index merging detection**: The rule can check if single-field indexes exist, but cannot guarantee Firestore will use merging
+
+## References
+
+- [Firestore Index Documentation](https://firebase.google.com/docs/firestore/query-data/indexes)
+- [Firestore Index Overview (includes index merging)](https://firebase.google.com/docs/firestore/query-data/index-overview)
 
 ## License
 
