@@ -41,7 +41,6 @@ export = createRule({
     type: 'problem',
     docs: {
       description: 'Ensure Firestore indexes are created for each query in the codebase',
-      recommended: 'recommended',
     },
     messages: {
       missingIndex:
@@ -254,7 +253,7 @@ export = createRule({
                       .replace(/Ref$/, '');
                     
                     collection = collectionName.charAt(0).toLowerCase() + collectionName.slice(1);
-                    if (!collection.endsWith('s')) {
+                    if (collection && !collection.endsWith('s')) {
                       collection += 's';
                     }
                     break;

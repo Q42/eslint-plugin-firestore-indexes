@@ -27,9 +27,12 @@
     "node": ">=14.0.0"
   },
   "peerDependencies": {
-    "eslint": ">=8.0.0"
+    "eslint": ">=8.0.0",
+    "@typescript-eslint/parser": ">=6.0.0",
+    "typescript": ">=4.0.0"
   },
   "devDependencies": {
+    "@types/node": "^25.0.0",
     "@typescript-eslint/parser": "^8.49.0",
     "@typescript-eslint/utils": "^8.49.0",
     "eslint": "^9.39.1",

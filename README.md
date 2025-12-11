@@ -8,10 +8,24 @@ Ensure Firestore indexes are created for each query in the codebase.
 
 This ESLint plugin helps you catch missing Firestore indexes at development time. It analyzes your code for Firestore queries and checks them against a configuration file (typically `indexes.json`) to ensure all required indexes are defined.
 
+**TypeScript-Powered Analysis:**
+This plugin uses TypeScript's type system to:
+- Automatically detect any function returning `FirebaseFirestore.CollectionReference` or `FirebaseFirestore.Query`
+- No need to hardcode collection reference function names
+- Support for conditional queries by tracing variables through assignments and branches
+- More robust detection compared to name-based pattern matching
+
+## Requirements
+
+This plugin requires:
+- **TypeScript**: The rule uses TypeScript's type checker to identify Firestore queries
+- **@typescript-eslint/parser**: Required for parsing TypeScript code
+- A valid `tsconfig.json` in your project
+
 ## Installation
 
 ```bash
-npm install --save-dev eslint-firestore-indexes
+npm install --save-dev eslint-firestore-indexes @typescript-eslint/parser typescript
 ```
 
 ## Usage
@@ -34,10 +48,44 @@ npm install --save-dev eslint-firestore-indexes
 }
 ```
 
-2. **Configure ESLint** in your `.eslintrc.js`:
+2. **Configure ESLint** with TypeScript parser in your `eslint.config.js` (ESLint 9+):
+
+```javascript
+import tsParser from '@typescript-eslint/parser';
+import firestoreIndexes from 'eslint-firestore-indexes';
+
+export default [
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+    plugins: {
+      'firestore-indexes': firestoreIndexes,
+    },
+    rules: {
+      'firestore-indexes/firestore-indexes': [
+        'error',
+        {
+          indexesPath: 'indexes.json', // Path to your indexes file
+        },
+      ],
+    },
+  },
+];
+```
+
+Or for legacy `.eslintrc.js` configuration:
 
 ```javascript
 module.exports = {
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: './tsconfig.json',
+  },
   plugins: ['eslint-firestore-indexes'],
   rules: {
     'eslint-firestore-indexes/firestore-indexes': [
@@ -50,10 +98,10 @@ module.exports = {
 };
 ```
 
-3. **Run ESLint** on your code:
+3. **Run ESLint** on your TypeScript code:
 
 ```bash
-npx eslint your-code.js
+npx eslint your-code.ts
 ```
 
 ## Rule Details
