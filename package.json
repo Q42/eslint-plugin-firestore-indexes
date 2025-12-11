@@ -1,0 +1,34 @@
+{
+  "name": "eslint-firestore-indexes",
+  "version": "1.0.0",
+  "description": "Ensure Firestore indexes are created for each query in the codebase",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "mocha tests/**/*.test.js",
+    "lint": "eslint lib tests"
+  },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "firestore",
+    "indexes",
+    "firebase"
+  ],
+  "author": "Q42",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Q42/eslint-firestore-indexes.git"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "peerDependencies": {
+    "eslint": ">=8.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "mocha": "^11.7.5"
+  }
+}
