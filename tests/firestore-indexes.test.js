@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 
 const { RuleTester } = require('eslint');
-const rule = require('../dist/rules/firestore-indexes');
+const rule = require('../lib/rules/firestore-indexes');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,82 +21,11 @@ const ruleTester = new RuleTester({
   languageOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    parser: require('@typescript-eslint/parser'),
-    parserOptions: {
-      project: './tsconfig.test.json',
-      tsconfigRootDir: path.join(__dirname, '..'),
-    },
   },
 });
 
-// Create a temporary indexes.json for testing
-const testIndexesPath = path.join(__dirname, 'test-indexes.json');
-const testIndexes = {
-  indexes: [
-    {
-      collectionGroup: 'users',
-      queryScope: 'COLLECTION',
-      fields: [
-        { fieldPath: 'age', order: 'ASCENDING' },
-        { fieldPath: 'name', order: 'ASCENDING' },
-      ],
-    },
-    {
-      collectionGroup: 'posts',
-      queryScope: 'COLLECTION',
-      fields: [
-        { fieldPath: 'status', order: 'ASCENDING' },
-        { fieldPath: 'createdAt', order: 'DESCENDING' },
-      ],
-    },
-    {
-      collectionGroup: 'products',
-      queryScope: 'COLLECTION',
-      fields: [
-        { fieldPath: 'category', order: 'ASCENDING' },
-        { fieldPath: 'price', order: 'ASCENDING' },
-        { fieldPath: 'rating', order: 'DESCENDING' },
-      ],
-    },
-    {
-      collectionGroup: 'templates',
-      queryScope: 'COLLECTION',
-      fields: [
-        { fieldPath: 'type', order: 'ASCENDING' },
-        { fieldPath: 'status', order: 'ASCENDING' },
-      ],
-    },
-    {
-      collectionGroup: 'templates',
-      queryScope: 'COLLECTION',
-      fields: [
-        { fieldPath: 'status', order: 'ASCENDING' },
-        { fieldPath: 'type', order: 'ASCENDING' },
-        { fieldPath: 'createdAt', order: 'DESCENDING' },
-      ],
-    },
-    {
-      collectionGroup: 'passports',
-      queryScope: 'COLLECTION',
-      fields: [
-        { fieldPath: 'intakers', arrayConfig: 'CONTAINS', order: 'ASCENDING' },
-        { fieldPath: 'updated', order: 'DESCENDING' },
-      ],
-    },
-    {
-      collectionGroup: 'passports',
-      queryScope: 'COLLECTION',
-      fields: [
-        { fieldPath: 'begeleider', arrayConfig: 'CONTAINS', order: 'ASCENDING' },
-        { fieldPath: 'updated', order: 'DESCENDING' },
-      ],
-    },
-  ],
-  fieldOverrides: [],
-};
-
-// Write test indexes file
-fs.writeFileSync(testIndexesPath, JSON.stringify(testIndexes, null, 2));
+// Use fixtures file for testing
+const testIndexesPath = path.join(__dirname, 'fixtures', 'test-indexes.json');
 
 ruleTester.run('firestore-indexes', rule, {
   valid: [
@@ -307,9 +236,6 @@ ruleTester.run('firestore-indexes', rule, {
     },
   ],
 });
-
-// Clean up test file
-fs.unlinkSync(testIndexesPath);
 
 console.log('All tests passed!');
 
