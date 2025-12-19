@@ -22,10 +22,10 @@
     "url": "https://github.com/Q42/eslint-firestore-indexes.git"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.18.0"
   },
   "peerDependencies": {
-    "eslint": ">=8.0.0"
+    "eslint": ">=9.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.27",
