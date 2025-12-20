@@ -62,6 +62,6 @@ describe('examples directory', function() {
       console.log(resultText);
     }
 
-    assert.ok(errorCount > 0, 'invalid-queries.js should have at least one ESLint error for missing indexes');
+    assert.ok(errorCount == 2, 'invalid-queries.js should be missing indexes for all queries');
   });
 });
