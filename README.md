@@ -98,16 +98,16 @@ This rule detects Firestore queries that require composite indexes and validates
 ### Examples of **incorrect** code:
 
 ```javascript
-// Missing index for users collection with email and status fields
+// Multiple orderBy clauses require composite index
 firestore.collection('users')
-  .where('email', '==', 'test@example.com')
-  .where('status', '==', 'active')
+  .orderBy('lastName', 'asc')
+  .orderBy('firstName', 'asc')
   .get();
 
-// Missing index for orders with customerId and orderDate
-firestore.collection('orders')
-  .where('customerId', '==', '123')
-  .orderBy('orderDate', 'desc')
+// Inequality + orderBy on different fields require composite index
+firestore.collection('products')
+  .where('price', '>', 100)
+  .orderBy('rating', 'desc')
   .get();
 ```
 
@@ -119,7 +119,19 @@ firestore.collection('users')
   .where('age', '>', 18)
   .get();
 
-// Index exists in indexes.json
+// Two equality filters - uses index merging (no composite index needed)
+firestore.collection('users')
+  .where('email', '==', 'test@example.com')
+  .where('status', '==', 'active')
+  .get();
+
+// Equality filter + orderBy - uses index merging (no composite index needed)
+firestore.collection('orders')
+  .where('customerId', '==', '123')
+  .orderBy('orderDate', 'desc')
+  .get();
+
+// Index exists in indexes.json (composite index)
 firestore.collection('users')
   .where('age', '>', 18)
   .where('name', '==', 'John')

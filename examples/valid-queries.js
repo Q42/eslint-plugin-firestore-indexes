@@ -48,9 +48,33 @@ async function getProductsByCategoryAndPrice() {
   return snapshot.docs.map(doc => doc.data());
 }
 
+// Valid: Two equality filters - uses index merging (no composite index needed)
+async function getUsersByEmailAndStatus() {
+  const snapshot = await firestore
+    .collection('users')
+    .where('email', '==', 'test@example.com')
+    .where('status', '==', 'active')
+    .get();
+  
+  return snapshot.docs.map(doc => doc.data());
+}
+
+// Valid: Equality filter + orderBy - uses index merging (no composite index needed)
+async function getOrdersByCustomerAndDate() {
+  const snapshot = await firestore
+    .collection('orders')
+    .where('customerId', '==', '123')
+    .orderBy('orderDate', 'desc')
+    .get();
+  
+  return snapshot.docs.map(doc => doc.data());
+}
+
 module.exports = {
   getUsersByAgeAndName,
   getPublishedPosts,
   getUsersByAge,
   getProductsByCategoryAndPrice,
+  getUsersByEmailAndStatus,
+  getOrdersByCustomerAndDate,
 };

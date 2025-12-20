@@ -5,42 +5,29 @@
 
 const firestore = require('firebase-admin').firestore();
 
-// Invalid: No index exists for users collection with email and status fields
-async function getUsersByEmailAndStatus() {
+// Invalid: Multiple orderBy clauses require composite index
+async function getUsersByLastAndFirstName() {
   const snapshot = await firestore
     .collection('users')
-    .where('email', '==', 'test@example.com')
-    .where('status', '==', 'active')
+    .orderBy('lastName', 'asc')
+    .orderBy('firstName', 'asc')
     .get();
   
   return snapshot.docs.map(doc => doc.data());
 }
 
-// Invalid: No index exists for orders collection
-async function getOrdersByCustomerAndDate() {
+// Invalid: Inequality + orderBy on different fields require composite index  
+async function getProductsByPriceOrderByRating() {
   const snapshot = await firestore
-    .collection('orders')
-    .where('customerId', '==', '123')
-    .orderBy('orderDate', 'desc')
-    .get();
-  
-  return snapshot.docs.map(doc => doc.data());
-}
-
-// Invalid: No index for this specific combination
-async function getProductsByBrandAndStock() {
-  const snapshot = await firestore
-    .collection('products')
-    .where('brand', '==', 'Apple')
-    .where('inStock', '==', true)
-    .orderBy('updatedAt', 'desc')
+    .collection('items')
+    .where('price', '>', 100)
+    .orderBy('rating', 'desc')
     .get();
   
   return snapshot.docs.map(doc => doc.data());
 }
 
 module.exports = {
-  getUsersByEmailAndStatus,
-  getOrdersByCustomerAndDate,
-  getProductsByBrandAndStock,
+  getUsersByLastAndFirstName,
+  getProductsByPriceOrderByRating,
 };
