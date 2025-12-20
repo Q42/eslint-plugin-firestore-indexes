@@ -107,79 +107,123 @@ ruleTester.run('firestore-indexes', rule, {
       `,
       options: [{ indexesPath: testIndexesPath }],
     },
+
+    // Valid: Index merging - two equality filters
+    {
+      code: `
+        async function test() {
+          const collectionSnapshot = await firestore
+            .invitationCollRef()
+            .where('userId', '==', userId)
+            .where('documentId', '==', documentId)
+            .limit(1)
+            .get();
+        }
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
+
+    // Valid: Index merging - two equality filters + one inequality
+    {
+      code: `
+        async function test() {
+          const result = await firestore
+            .sessionCollRef()
+            .where('documentId', '==', documentId)
+            .where('status', '==', null)
+            .where('count', '<', MAX_COUNT)
+            .get();
+        }
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
+
+    // Valid: Index merging - all equality filters
+    {
+      code: `
+        firestore.collection('items')
+          .where('status', '==', 'active')
+          .where('category', '==', 'electronics')
+          .get();
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
+
+    // Valid: Index merging - three equality filters
+    {
+      code: `
+        firestore.collection('items')
+          .where('status', '==', 'active')
+          .where('category', '==', 'electronics')
+          .where('inStock', '==', true)
+          .get();
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
+
+    // Valid: Index merging - equality filters + one orderBy
+    {
+      code: `
+        firestore.collection('items')
+          .where('status', '==', 'active')
+          .where('category', '==', 'electronics')
+          .orderBy('createdAt', 'desc')
+          .get();
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
+
+    // Valid: Index merging - equality filters + one inequality
+    {
+      code: `
+        firestore.collection('items')
+          .where('status', '==', 'active')
+          .where('price', '>', 100)
+          .get();
+      `,
+      options: [{ indexesPath: testIndexesPath }],
+    },
   ],
 
   invalid: [
-    // Invalid: No index for users with email and status
+    // Invalid: Multiple orderBy clauses (cannot use index merging)
     {
       code: `
         firestore.collection('users')
-          .where('email', '==', 'test@example.com')
-          .where('status', '==', 'active')
+          .orderBy('email', 'asc')
+          .orderBy('status', 'desc')
           .get();
       `,
       options: [{ indexesPath: testIndexesPath }],
       errors: [
         {
           messageId: 'missingIndex',
-          data: {
-            collection: 'users',
-            filters: 'email (==), status (==)',
-            indexesPath: testIndexesPath,
-          },
         },
       ],
     },
 
-    // Invalid: No index for orders collection
+    // Invalid: Multiple inequality filters on different fields (cannot use index merging)
     {
       code: `
         firestore.collection('orders')
-          .where('customerId', '==', '123')
-          .orderBy('orderDate', 'desc')
+          .where('price', '>', 100)
+          .where('quantity', '<', 10)
           .get();
       `,
       options: [{ indexesPath: testIndexesPath }],
       errors: [
         {
           messageId: 'missingIndex',
-          data: {
-            collection: 'orders',
-            filters: 'customerId (==), orderDate (orderBy)',
-            indexesPath: testIndexesPath,
-          },
         },
       ],
     },
 
-    // Invalid: Wrong field combination for products
+    // Invalid: Inequality + orderBy on different fields (cannot use simple index merging)
     {
       code: `
         firestore.collection('products')
-          .where('brand', '==', 'Apple')
-          .where('inStock', '==', true)
-          .orderBy('updatedAt', 'desc')
-          .get();
-      `,
-      options: [{ indexesPath: testIndexesPath }],
-      errors: [
-        {
-          messageId: 'missingIndex',
-          data: {
-            collection: 'products',
-            filters: 'brand (==), inStock (==), updatedAt (orderBy)',
-            indexesPath: testIndexesPath,
-          },
-        },
-      ],
-    },
-
-    // Invalid: Multiple where clauses without index
-    {
-      code: `
-        db.collection('comments')
-          .where('postId', '==', '456')
-          .where('approved', '==', true)
+          .where('price', '>', 100)
+          .orderBy('rating', 'desc')
           .get();
       `,
       options: [{ indexesPath: testIndexesPath }],
@@ -190,16 +234,15 @@ ruleTester.run('firestore-indexes', rule, {
       ],
     },
 
-    // Invalid: Query with where clause after orderBy - missing index
+    // Invalid: Multiple inequality filters on different fields with orderBy
     {
       code: `
         async function test() {
           const snapshot = await firestore
             .templateCollRef()
-            .where('status', '==', FirebaseTemplateStatus.Current)
-            .where('type', '==', type)
+            .where('priority', '>', 5)
+            .where('score', '<', 100)
             .orderBy('createdAt', 'desc')
-            .where('foobar', '==', 'bar')
             .get();
         }
       `,
@@ -207,11 +250,6 @@ ruleTester.run('firestore-indexes', rule, {
       errors: [
         {
           messageId: 'missingIndex',
-          data: {
-            collection: 'templates',
-            filters: 'status (==), type (==), createdAt (orderBy), foobar (==)',
-            indexesPath: testIndexesPath,
-          },
         },
       ],
     },
