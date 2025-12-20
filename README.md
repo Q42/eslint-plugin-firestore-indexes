@@ -164,20 +164,73 @@ Firestore requires composite indexes for queries that:
 
 Single field queries and simple equality checks typically don't require custom indexes.
 
-### Index Merging vs Composite Indexes
+### Index Merging Support
+
+**Version 1.1.0+**: This plugin now supports Firestore's **Index Merging** feature! Queries that can use index merging will not trigger errors, even if no composite index is defined.
 
 Firestore can satisfy some queries in two ways:
 
 **1. Composite Indexes** (recommended for frequently-used queries):
 - Explicit indexes defined in `firestore.indexes.json`
 - Typically provide better performance
-- Required for complex queries with inequality filters or multiple `orderBy` clauses
+- Required for complex queries
 
-**2. Index Merging**:
-- Firestore can merge existing single-field indexes to satisfy queries
-- Only works with equality (`==`) filters and at most one `orderBy` clause
-- Requires single-field indexes for each field used in the query
-- May have performance implications compared to composite indexes
+**2. Index Merging** (automatic):
+- Firestore automatically merges single-field indexes to satisfy certain queries
+- **This plugin recognizes when index merging is available and will not report errors**
+- Works when all of the following conditions are met:
+  - All filters are equality (`==`) filters, OR
+  - All filters except one are equality, with one inequality filter on a single field, OR
+  - All filters except one are equality, with one `orderBy` clause
+- Does **NOT** work for:
+  - Multiple `orderBy` clauses
+  - Multiple inequality filters on different fields
+  - Inequality filter and `orderBy` on different fields
+  - Array-contains queries combined with other filters (requires composite index)
+
+**Examples that use index merging (no composite index needed):**
+```javascript
+// All equality filters
+firestore.collection('users')
+  .where('status', '==', 'active')
+  .where('role', '==', 'admin')
+  .where('verified', '==', true)
+  .get();
+
+// Equality filters + one inequality
+firestore.collection('products')
+  .where('category', '==', 'electronics')
+  .where('price', '>', 100)
+  .get();
+
+// Equality filters + one orderBy
+firestore.collection('posts')
+  .where('status', '==', 'published')
+  .where('author', '==', userId)
+  .orderBy('createdAt', 'desc')
+  .get();
+```
+
+**Examples that require composite indexes:**
+```javascript
+// Multiple orderBy clauses
+firestore.collection('users')
+  .orderBy('lastName', 'asc')
+  .orderBy('firstName', 'asc')
+  .get();
+
+// Inequality + orderBy on different fields
+firestore.collection('products')
+  .where('price', '>', 100)
+  .orderBy('rating', 'desc')
+  .get();
+
+// Multiple inequalities on different fields
+firestore.collection('products')
+  .where('price', '>', 100)
+  .where('stock', '<', 10)
+  .get();
+```
 
 ### Important: Prefix Matching
 
@@ -240,7 +293,7 @@ This ESLint rule has some limitations:
 2. **Conditional logic**: May have false positives/negatives with complex conditional queries
 3. **Cross-file queries**: Queries built across multiple functions may not be fully detected
 4. **Query helpers**: Custom query helper functions may need special handling
-5. **Index merging detection**: The rule can check if single-field indexes exist, but cannot guarantee Firestore will use merging
+5. **Performance implications**: The rule allows queries that use index merging, but these may have different performance characteristics than composite indexes. Consider creating composite indexes for frequently-used queries even when index merging is available.
 
 ## References
 
