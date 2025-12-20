@@ -57,17 +57,6 @@
         { "fieldPath": "begeleider", "arrayConfig": "CONTAINS", "order": "ASCENDING" },
         { "fieldPath": "updated", "order": "DESCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "sessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "documentId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "count", "order": "ASCENDING" },
-        { "fieldPath": "__name__", "order": "ASCENDING" }
-      ],
-      "density": "SPARSE_ALL"
     }
   ],
   "fieldOverrides": []
