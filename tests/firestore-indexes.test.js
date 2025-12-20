@@ -123,7 +123,7 @@ ruleTester.run('firestore-indexes', rule, {
       options: [{ indexesPath: testIndexesPath }],
     },
 
-    // Valid: Index merging - two equality filters + one inequality (uses composite index)
+    // Valid: Index merging - two equality filters + one inequality
     {
       code: `
         async function test() {
